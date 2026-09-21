@@ -21,7 +21,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                    cd app
+                    cd server.js
                     npm install
                     npm test
                 '''
