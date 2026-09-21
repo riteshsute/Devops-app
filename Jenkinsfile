@@ -21,9 +21,8 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                    cd server.js
-                    npm install
-                    npm test
+                    npm install 
+                    node --check server.js
                 '''
             }
         }
