@@ -1,4 +1,3 @@
-
 pipeline {
 
     agent any
@@ -22,7 +21,17 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
+                    echo "===== TEST STAGE ====="
+                    echo "Current directory:"
+                    pwd
+
+                    echo "Files:"
+                    ls -la
+
+                    echo "Installing dependencies..."
                     npm install
+
+                    echo "Checking server.js syntax..."
                     node --check server.js
                 '''
             }
@@ -31,6 +40,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
+                    echo "===== DOCKER BUILD ====="
+
                     docker build \
                     -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
                     .
@@ -41,6 +52,8 @@ pipeline {
         stage('Login to ECR') {
             steps {
                 sh '''
+                    echo "===== ECR LOGIN ====="
+
                     aws ecr get-login-password \
                     --region ${AWS_REGION} |
                     docker login \
@@ -53,6 +66,8 @@ pipeline {
         stage('Push Image') {
             steps {
                 sh '''
+                    echo "===== PUSH IMAGE ====="
+
                     docker tag \
                     ${ECR_REPOSITORY}:${IMAGE_TAG} \
                     ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
