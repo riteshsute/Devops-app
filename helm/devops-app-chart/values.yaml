@@ -1,4 +1,4 @@
-replicaCount: 2
+replicaCount: 3
 
 image:
   repository: 329995585174.dkr.ecr.ap-south-1.amazonaws.com/devops-app
