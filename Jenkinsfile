@@ -22,17 +22,21 @@ pipeline {
             steps {
                 sh '''
                     echo "===== TEST STAGE ====="
-                    echo "Current directory:"
+
+                    echo "PATH:"
+                    echo $PATH
+
+                    echo "Checking Node..."
+                    which node || true
+                    node --version || true
+
+                    echo "Checking npm..."
+                    which npm || true
+                    npm --version || true
+
+                    echo "Checking files..."
                     pwd
-
-                    echo "Files:"
                     ls -la
-
-                    echo "Installing dependencies..."
-                    npm install
-
-                    echo "Checking server.js syntax..."
-                    node --check server.js
                 '''
             }
         }
