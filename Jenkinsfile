@@ -1,3 +1,4 @@
+```groovy
 pipeline {
 
     agent any
@@ -21,7 +22,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                    npm install 
+                    npm install
                     node --check server.js
                 '''
             }
@@ -32,7 +33,7 @@ pipeline {
                 sh '''
                     docker build \
                     -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
-                    ./app
+                    .
                 '''
             }
         }
@@ -73,3 +74,4 @@ pipeline {
         }
     }
 }
+```
