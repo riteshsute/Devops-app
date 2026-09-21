@@ -41,17 +41,30 @@ pipeline {
             }
         }
 
+        
         stage('Build Docker Image') {
             steps {
                 sh '''
-                    echo "===== DOCKER BUILD ====="
+                    echo "===== DOCKER DEBUG ====="
 
-                    docker build \
-                    -t ${ECR_REPOSITORY}:${IMAGE_TAG} \
-                    .
+                    echo "Checking Docker CLI..."
+                    which docker || echo "DOCKER CLI NOT FOUND"
+
+                    echo "Docker version..."
+                    docker --version || echo "DOCKER COMMAND FAILED"
+
+                    echo "Docker info..."
+                    docker info || echo "DOCKER DAEMON NOT AVAILABLE"
+
+                    echo "Current directory..."
+                    pwd
+
+                    echo "Files..."
+                    ls -la
                 '''
             }
         }
+
 
         stage('Login to ECR') {
             steps {
