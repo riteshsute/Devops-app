@@ -66,19 +66,30 @@ pipeline {
         }
 
 
+        
         stage('Login to ECR') {
             steps {
                 sh '''
-                    echo "===== ECR LOGIN ====="
+                    echo "===== AWS CLI DEBUG ====="
 
-                    aws ecr get-login-password \
-                    --region ${AWS_REGION} |
-                    docker login \
-                    --username AWS \
-                    --password-stdin ${ECR_REGISTRY}
+                    echo "Checking AWS CLI..."
+                    which aws || echo "AWS CLI NOT FOUND"
+
+                    echo "AWS version..."
+                    aws --version || echo "AWS COMMAND FAILED"
+
+                    echo "Checking Docker..."
+                    docker --version
+
+                    echo "AWS region:"
+                    echo ${AWS_REGION}
+
+                    echo "ECR registry:"
+                    echo ${ECR_REGISTRY}
                 '''
             }
         }
+
 
         stage('Push Image') {
             steps {
