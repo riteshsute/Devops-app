@@ -5,7 +5,7 @@ provider "aws" {
     tags = {
       Project     = "devops-app"
       Environment = "dev"
-      ManagedBy  = "Terraform"
+      ManagedBy   = "Terraform"
     }
   }
 }
