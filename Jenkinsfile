@@ -131,28 +131,7 @@ pipeline {
         }
 
         // 6. Build Docker image
-       stage('Build and Push Image') {
-            steps {
-                sh '''
-                    set -e
-
-                    echo "===== BUILDING AND PUSHING IMAGE WITH BUILDKIT ====="
-
-                    buildctl-daemonless.sh build \
-                        --frontend dockerfile.v0 \
-                        --local context=. \
-                        --local dockerfile=. \
-                        --opt filename=Dockerfile \
-                        --progress=plain \
-                        --output type=image,name="${IMAGE_NAME}:${IMAGE_TAG}",push=true
-
-                    echo "===== IMAGE PUSHED SUCCESSFULLY ====="
-                    echo "${IMAGE_NAME}:${IMAGE_TAG}"
-                '''
-            }
-        }
-    }
-
+       
     post {
         success {
             echo 'DevOps CI pipeline completed successfully!'
