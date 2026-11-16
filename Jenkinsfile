@@ -107,15 +107,25 @@ pipeline {
                 sh '''
                     set -e
 
-                    echo "===== LOGGING IN TO ECR ====="
+                    echo "===== CONFIGURING ECR AUTH FOR BUILDKIT ====="
 
-                    aws ecr get-login-password \
-                        --region "$AWS_REGION" | \
-                    docker login \
-                        --username AWS \
-                        --password-stdin "$ECR_REGISTRY"
+                    mkdir -p "$HOME/.docker"
+                    chmod 700 "$HOME/.docker"
 
-                    echo "Successfully logged in to ECR"
+                    ECR_PASSWORD=$(aws ecr get-login-password \
+                        --region "$AWS_REGION")
+
+                    AUTH=$(printf 'AWS:%s' "$ECR_PASSWORD" | base64 -w 0)
+
+                    printf '{"auths":{"%s":{"auth":"%s"}}}' \
+                        "$ECR_REGISTRY" "$AUTH" \
+                        > "$HOME/.docker/config.json"
+
+                    chmod 600 "$HOME/.docker/config.json"
+
+                    unset ECR_PASSWORD AUTH
+
+                    echo "ECR authentication configuration created."
                 '''
             }
         }
