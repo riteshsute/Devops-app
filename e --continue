@@ -1,0 +1,10 @@
+* [33m8e3cc3a[m[33m ([m[1;36mHEAD[m[33m, [m[1;32mbackup-buildkit[m[33m)[m Replace Docker build with BuildKit
+* [33ma4fb85c[m[33m ([m[1;31morigin/dev[m[33m)[m Remove Docker image build and push stage
+* [33m418abc1[m Refactor Jenkinsfile to build and push Docker image
+* [33m872a014[m Configure ECR auth for BuildKit
+* [33ma0b65eb[m Skip placeholder test script
+* [33m4f4199f[m Replace Docker checks with BuildKit checks
+* [33mf00c28b[m Replace Docker checks with BuildKit checks
+* [33me759719[m Update Jenkins CI/CD pipeline
+* [33m70435b3[m Jenkins pipeline added docker stage
+* [33md68420b[m Docker and jenkins file modified

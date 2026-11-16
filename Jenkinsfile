@@ -3,6 +3,10 @@ pipeline {
 
     agent any
 
+    triggers {
+        pollSCM('H/2 * * * *')
+    }
+
     environment {
         AWS_REGION      = 'ap-south-1'
         AWS_ACCOUNT_ID  = '329995585174'

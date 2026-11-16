@@ -24,7 +24,17 @@ RUN apt-get update && \
 # Copy BuildKit tools into the Jenkins agent
 COPY --from=buildkit /usr/bin/ /opt/buildkit/bin/
 
-ENV PATH="/opt/buildkit/bin:${PATH}"
+
+# Install Debian-compatible pigz
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends pigz && \
+    rm -rf /var/lib/apt/lists/*
+
+# Use Debian's compatible pigz for BuildKit
+RUN ln -sf /usr/bin/pigz /opt/buildkit/bin/pigz
+
+
+ENV PATH="/usr/bin:/bin:/opt/buildkit/bin:${PATH}"
 
 # Configure subordinate UID/GID mappings for rootless BuildKit
 RUN printf 'jenkins:100000:65536\n' > /etc/subuid && \
