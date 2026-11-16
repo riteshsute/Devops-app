@@ -131,42 +131,40 @@ pipeline {
         }
 
         // 6. Build Docker image
-        stage('Build Docker Image') {
+       stage('Build and Push Image') {
             steps {
                 sh '''
                     set -e
 
-                    echo "===== BUILDING DOCKER IMAGE ====="
+                    echo "===== BUILDING AND PUSHING IMAGE WITH BUILDKIT ====="
 
-                    docker build \
-                        -t "${ECR_REPOSITORY}:${IMAGE_TAG}" \
-                        .
+                    buildctl-daemonless.sh build \
+                        --frontend dockerfile.v0 \
+                        --local context=. \
+                        --local dockerfile=. \
+                        --opt filename=Dockerfile \
+                        --progress=plain \
+                        --output type=image,name="${IMAGE_NAME}:${IMAGE_TAG}",push=true
 
-                    docker tag \
-                        "${ECR_REPOSITORY}:${IMAGE_TAG}" \
-                        "${IMAGE_NAME}:${IMAGE_TAG}"
-
-                    echo "Docker image built successfully"
-
-                    docker images
-                '''
-            }
-        }
-
-        // 7. Push image to ECR
-        stage('Push Image') {
-            steps {
-                sh '''
-                    set -e
-
-                    echo "===== PUSHING IMAGE TO ECR ====="
-
-                    docker push "${IMAGE_NAME}:${IMAGE_TAG}"
-
-                    echo "Image pushed successfully"
+                    echo "===== IMAGE PUSHED SUCCESSFULLY ====="
                     echo "${IMAGE_NAME}:${IMAGE_TAG}"
                 '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'DevOps CI pipeline completed successfully!'
+            echo 'Application image built and pushed to Amazon ECR.'
+        }
+
+        failure {
+            echo 'DevOps CI pipeline failed. Check the failed stage in Console Output.'
+        }
+
+        always {
+            echo 'Jenkins pipeline execution finished.'
         }
     }
 
