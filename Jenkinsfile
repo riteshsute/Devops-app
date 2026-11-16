@@ -41,6 +41,23 @@ pipeline {
             }
         }
 
+        stage('Check Build Agent') {
+            steps {
+                sh '''
+                    echo "===== AGENT INFORMATION ====="
+                    hostname
+                    whoami
+                    pwd
+                    cat /etc/os-release
+
+                    echo "===== INSTALLED TOOLS ====="
+                    command -v aws || true
+                    command -v docker || true
+                    command -v node || true
+                    command -v npm || true
+                '''
+            }
+        }
         
         stage('Build Docker Image') {
             steps {
