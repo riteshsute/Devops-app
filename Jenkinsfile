@@ -105,6 +105,7 @@ pipeline {
         stage('Login to ECR') {
             steps {
                 sh '''
+                    set +x
                     set -e
 
                     echo "===== CONFIGURING ECR AUTH FOR BUILDKIT ====="
