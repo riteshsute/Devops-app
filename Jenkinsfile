@@ -72,11 +72,15 @@ pipeline {
 
                     echo "===== RUNNING APPLICATION TESTS ====="
 
-                    if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
+                    if node -e "
+                        const test = require('./package.json').scripts?.test;
+                        process.exit(!test || test.includes('no test specified') ? 1 : 0);
+                    "
+                    then
                         npm test
                     else
-                        echo "No test script configured in package.json"
-                        echo "Skipping application tests"
+                        echo "No actual test script configured."
+                        echo "Skipping tests for now."
                     fi
                 '''
             }
