@@ -1,124 +1,149 @@
+
 pipeline {
 
     agent any
 
     environment {
-        AWS_REGION = 'ap-south-1'
-        ECR_REPOSITORY = 'devops-app'
-        AWS_ACCOUNT_ID = '329995585174'
-        IMAGE_TAG = "${BUILD_NUMBER}"
-        ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        AWS_REGION      = 'ap-south-1'
+        AWS_ACCOUNT_ID  = '329995585174'
+        ECR_REPOSITORY  = 'devops-app'
+        IMAGE_TAG       = "${BUILD_NUMBER}"
+        ECR_REGISTRY    = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        IMAGE_NAME      = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}"
     }
 
     stages {
 
+        // 1. Checkout source code
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Test') {
-            steps {
-                sh '''
-                    echo "===== TEST STAGE ====="
-
-                    echo "PATH:"
-                    echo $PATH
-
-                    echo "Checking Node..."
-                    which node || true
-                    node --version || true
-
-                    echo "Checking npm..."
-                    which npm || true
-                    npm --version || true
-
-                    echo "Checking files..."
-                    pwd
-                    ls -la
-                '''
-            }
-        }
-
+        // 2. Verify Node.js and npm
         stage('Check Build Agent') {
             steps {
                 sh '''
+                    set -e
+
                     echo "===== AGENT INFORMATION ====="
                     hostname
                     whoami
                     pwd
-                    cat /etc/os-release
 
                     echo "===== INSTALLED TOOLS ====="
-                    command -v aws || true
-                    command -v docker || true
-                    command -v node || true
-                    command -v npm || true
+                    node --version
+                    npm --version
+                    aws --version
+
+                    echo "===== DOCKER CHECK ====="
+                    docker --version
+                    docker info
                 '''
             }
         }
-        
-        stage('Build Docker Image') {
+
+        // 3. Install dependencies and test application
+        stage('Install Dependencies') {
             steps {
                 sh '''
-                    echo "===== DOCKER DEBUG ====="
+                    set -e
 
-                    echo "Checking Docker CLI..."
-                    which docker || echo "DOCKER CLI NOT FOUND"
+                    echo "===== INSTALLING DEPENDENCIES ====="
+                    npm ci
 
-                    echo "Docker version..."
-                    docker --version || echo "DOCKER COMMAND FAILED"
-
-                    echo "Docker info..."
-                    docker info || echo "DOCKER DAEMON NOT AVAILABLE"
-
-                    echo "Current directory..."
-                    pwd
-
-                    echo "Files..."
-                    ls -la
+                    echo "Dependencies installed successfully"
                 '''
             }
         }
 
+        stage('Test') {
+            steps {
+                sh '''
+                    set -e
 
-        
+                    echo "===== RUNNING APPLICATION TESTS ====="
+
+                    if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
+                        npm test
+                    else
+                        echo "No test script configured in package.json"
+                        echo "Skipping application tests"
+                    fi
+                '''
+            }
+        }
+
+        // 4. Verify AWS credentials
+        stage('Verify AWS Identity') {
+            steps {
+                sh '''
+                    set -e
+
+                    echo "===== VERIFYING AWS IDENTITY ====="
+
+                    aws sts get-caller-identity
+
+                    echo "AWS identity verified"
+                '''
+            }
+        }
+
+        // 5. Login to Amazon ECR
         stage('Login to ECR') {
             steps {
                 sh '''
-                    echo "===== AWS CLI DEBUG ====="
+                    set -e
 
-                    echo "Checking AWS CLI..."
-                    which aws || echo "AWS CLI NOT FOUND"
+                    echo "===== LOGGING IN TO ECR ====="
 
-                    echo "AWS version..."
-                    aws --version || echo "AWS COMMAND FAILED"
+                    aws ecr get-login-password \
+                        --region "$AWS_REGION" | \
+                    docker login \
+                        --username AWS \
+                        --password-stdin "$ECR_REGISTRY"
 
-                    echo "Checking Docker..."
-                    docker --version
-
-                    echo "AWS region:"
-                    echo ${AWS_REGION}
-
-                    echo "ECR registry:"
-                    echo ${ECR_REGISTRY}
+                    echo "Successfully logged in to ECR"
                 '''
             }
         }
 
+        // 6. Build Docker image
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    set -e
 
+                    echo "===== BUILDING DOCKER IMAGE ====="
+
+                    docker build \
+                        -t "${ECR_REPOSITORY}:${IMAGE_TAG}" \
+                        .
+
+                    docker tag \
+                        "${ECR_REPOSITORY}:${IMAGE_TAG}" \
+                        "${IMAGE_NAME}:${IMAGE_TAG}"
+
+                    echo "Docker image built successfully"
+
+                    docker images
+                '''
+            }
+        }
+
+        // 7. Push image to ECR
         stage('Push Image') {
             steps {
                 sh '''
-                    echo "===== PUSH IMAGE ====="
+                    set -e
 
-                    docker tag \
-                    ${ECR_REPOSITORY}:${IMAGE_TAG} \
-                    ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+                    echo "===== PUSHING IMAGE TO ECR ====="
 
-                    docker push \
-                    ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+                    docker push "${IMAGE_NAME}:${IMAGE_TAG}"
+
+                    echo "Image pushed successfully"
+                    echo "${IMAGE_NAME}:${IMAGE_TAG}"
                 '''
             }
         }
@@ -127,10 +152,15 @@ pipeline {
     post {
         success {
             echo 'DevOps CI pipeline completed successfully!'
+            echo 'Application image pushed to Amazon ECR.'
         }
 
         failure {
-            echo 'DevOps CI pipeline failed.'
+            echo 'DevOps CI pipeline failed. Check the failed stage in Console Output.'
+        }
+
+        always {
+            echo 'Jenkins pipeline execution finished.'
         }
     }
 }
