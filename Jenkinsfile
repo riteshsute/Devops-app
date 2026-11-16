@@ -22,6 +22,7 @@ pipeline {
         }
 
         // 2. Verify Node.js and npm
+        
         stage('Check Build Agent') {
             steps {
                 sh '''
@@ -36,13 +37,19 @@ pipeline {
                     node --version
                     npm --version
                     aws --version
+                    git --version
 
-                    echo "===== DOCKER CHECK ====="
-                    docker --version
-                    docker info
+                    echo "===== BUILDKIT CHECK ====="
+                    buildctl --version
+                    buildkitd --version
+                    rootlesskit --version
+
+                    echo "===== BUILD DIRECTORY ====="
+                    ls -ld /home/jenkins/.local/share/buildkit
                 '''
             }
         }
+
 
         // 3. Install dependencies and test application
         stage('Install Dependencies') {
