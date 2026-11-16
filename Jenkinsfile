@@ -44,7 +44,7 @@ pipeline {
                     buildkitd --version
                     rootlesskit --version
 
-                    echo "===== BUILD DIRECTORY ====="
+                    echo "===== BUILDKIT DIRECTORY ====="
                     ls -ld /home/jenkins/.local/share/buildkit
                 '''
             }
