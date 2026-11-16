@@ -131,22 +131,28 @@ pipeline {
         }
 
         // 6. Build Docker image
-       
-    post {
-        success {
-            echo 'DevOps CI pipeline completed successfully!'
-            echo 'Application image built and pushed to Amazon ECR.'
-        }
+        stage('Build and Push Image') {
+            steps {
+                sh '''
+                    set -e
 
-        failure {
-            echo 'DevOps CI pipeline failed. Check the failed stage in Console Output.'
-        }
+                    echo "===== BUILDING AND PUSHING IMAGE WITH BUILDKIT ====="
 
-        always {
-            echo 'Jenkins pipeline execution finished.'
+                    buildctl-daemonless.sh build \
+                        --frontend dockerfile.v0 \
+                        --local context=. \
+                        --local dockerfile=. \
+                        --opt filename=Dockerfile \
+                        --progress=plain \
+                        --output type=image,name="${IMAGE_NAME}:${IMAGE_TAG}",push=true
+
+                    echo "===== IMAGE PUSHED SUCCESSFULLY ====="
+                    echo "${IMAGE_NAME}:${IMAGE_TAG}"
+                '''
+            }
+
         }
     }
-
     post {
         success {
             echo 'DevOps CI pipeline completed successfully!'
